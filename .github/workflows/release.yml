@@ -1,0 +1,118 @@
+name: Build and Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Chrome Extension
+        run: pnpm build:chrome
+
+      - name: Build Firefox Extension
+        run: pnpm build:firefox
+
+      - name: Zip Chrome Extension
+        run: |
+          cd .output/chrome-mv3
+          zip -r ../../lux-wallet-chrome.zip .
+
+      - name: Zip Firefox Extension
+        run: |
+          cd .output/firefox-mv2
+          zip -r ../../lux-wallet-firefox.zip .
+
+      - name: Upload Chrome Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lux-wallet-chrome
+          path: lux-wallet-chrome.zip
+
+      - name: Upload Firefox Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lux-wallet-firefox
+          path: lux-wallet-firefox.zip
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            lux-wallet-chrome.zip
+            lux-wallet-firefox.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-chrome:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download Chrome Build
+        uses: actions/download-artifact@v4
+        with:
+          name: lux-wallet-chrome
+
+      - name: Publish to Chrome Web Store
+        uses: mnao305/chrome-extension-upload@v5.0.0
+        continue-on-error: true
+        with:
+          file-path: lux-wallet-chrome.zip
+          extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+          client-id: ${{ secrets.CHROME_CLIENT_ID }}
+          client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+          refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+
+  publish-firefox:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download Firefox Build
+        uses: actions/download-artifact@v4
+        with:
+          name: lux-wallet-firefox
+
+      - name: Publish to Firefox Add-ons
+        uses: yayuyokitano/firefox-addon@v0.0.6-alpha
+        continue-on-error: true
+        with:
+          api_key: ${{ secrets.FIREFOX_API_KEY }}
+          api_secret: ${{ secrets.FIREFOX_API_SECRET }}
+          guid: '{lux-wallet@lux.network}'
+          xpi_path: lux-wallet-firefox.zip

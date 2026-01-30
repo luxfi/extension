@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Lux Wallet",
+  "description": "Lux Wallet - A self-custody crypto wallet for the Lux ecosystem with multi-chain support.",
+  "version": "1.0.0",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": ["alarms", "notifications", "sidePanel", "storage", "tabs"],
+  "host_permissions": ["https://*.lux.exchange/*", "https://*.lux.network/*"],
+  "externally_connectable": {
+    "ids": [],
+    "matches": ["https://app.lux.exchange/*", "https://*.lux.exchange/*", "https://*.lux.network/*"]
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U",
+        "mac": "Command+Shift+U"
+      },
+      "description": "Toggles the sidebar"
+    }
+  }
+}
