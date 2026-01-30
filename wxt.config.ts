@@ -30,6 +30,8 @@ export default defineConfig({
     const isDevelopment = env.mode === 'development'
     const BUILD_ENV = isDevelopment ? undefined : process.env.BUILD_ENV
     const isFirefox = env.browser === 'firefox'
+    const isSafari = env.browser === 'safari'
+    const isChromium = !isFirefox && !isSafari
 
     const EXTENSION_NAME_POSTFIX = BUILD_ENV === 'dev' ? 'DEV' : BUILD_ENV === 'beta' ? 'BETA' : ''
     const name = EXTENSION_NAME_POSTFIX ? `${BASE_NAME} ${EXTENSION_NAME_POSTFIX}` : BASE_NAME
@@ -45,8 +47,8 @@ export default defineConfig({
     // Base permissions (cross-browser compatible)
     const permissions: string[] = ['alarms', 'notifications', 'storage', 'tabs']
 
-    // Add Chrome-only permissions
-    if (!isFirefox) {
+    // Add Chrome-only permissions (sidePanel not supported on Firefox/Safari)
+    if (isChromium) {
       permissions.push('sidePanel')
     }
 
@@ -67,8 +69,8 @@ export default defineConfig({
       },
     }
 
-    // Chrome-specific settings
-    if (!isFirefox) {
+    // Chrome/Chromium-specific settings (Chrome, Brave, Arc, Edge, Opera, Comet, Atlas, etc.)
+    if (isChromium) {
       manifest.minimum_chrome_version = '116'
       manifest.action = {
         default_icon: icons,
@@ -90,6 +92,20 @@ export default defineConfig({
         },
       }
       manifest.browser_action = {
+        default_icon: icons,
+        default_title: BASE_NAME,
+      }
+    }
+
+    // Safari-specific settings (macOS and iOS)
+    if (isSafari) {
+      manifest.browser_specific_settings = {
+        safari: {
+          strict_min_version: '15.4',
+        },
+      }
+      // Safari uses action like Chrome but with some differences
+      manifest.action = {
         default_icon: icons,
         default_title: BASE_NAME,
       }
