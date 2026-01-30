@@ -1,38 +1,26 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Web App",
-  "extends": ["../../tsconfig.base.json"],
-  "include": ["**/*.ts", "**/*.tsx", "**/*.json", "declarations.d.ts"],
-  "exclude": ["node_modules", ".output", "wxt.config.ts"],
-  "references": [
-    {
-      "path": "../../packages/wallet"
-    },
-    {
-      "path": "../../packages/utilities"
-    },
-    {
-      "path": "../../packages/lx"
-    },
-    {
-      "path": "../../packages/ui"
-    },
-    {
-      "path": "../../packages/sessions"
-    },
-    {
-      "path": "../../packages/gating"
-    },
-    {
-      "path": "../../packages/api"
-    }
-  ],
+  "display": "Lux Wallet Extension",
+  "include": ["src/**/*.ts", "src/**/*.tsx", "**/*.json", "src/declarations.d.ts"],
+  "exclude": ["node_modules", ".output", ".wxt", "wxt.config.ts"],
   "compilerOptions": {
-    "baseUrl": "./",
+    "target": "ES2022",
+    "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "jsx": "preserve",
+    "lib": ["dom", "dom.iterable", "ESNext"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["chrome", "jest", "node"]
+    "isolatedModules": true,
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["chrome", "node"]
   }
 }
