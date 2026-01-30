@@ -41,6 +41,11 @@ jobs:
       - name: Build Chrome Extension
         run: pnpm build:chrome
 
+      - name: Verify Chrome Build Contents
+        run: |
+          echo "Chrome build file count: $(find .output/chrome-mv3 -type f | wc -l)"
+          ls -la .output/chrome-mv3/
+
       - name: Build Firefox Extension
         run: pnpm build:firefox
 
@@ -174,8 +179,11 @@ jobs:
 
       - name: Verify Chrome Extension Build
         run: |
-          echo "Extension directory contents:"
-          ls -la .output/chrome-mv3/
+          echo "Extension directory contents (recursive):"
+          find .output/chrome-mv3 -type f | head -50
+          echo "---"
+          echo "File count: $(find .output/chrome-mv3 -type f | wc -l)"
+          echo "---"
           echo "Manifest contents:"
           cat .output/chrome-mv3/manifest.json
 
