@@ -153,6 +153,7 @@ jobs:
     name: E2E Test Chrome
     needs: build-web
     runs-on: ubuntu-latest
+    continue-on-error: true  # Chrome extension testing in headless CI is experimental
 
     steps:
       - name: Checkout

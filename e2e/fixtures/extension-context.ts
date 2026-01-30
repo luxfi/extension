@@ -78,9 +78,17 @@ export async function createExtensionContext(options: CreateExtensionContextOpti
 }
 
 async function createChromeContext(extensionPath: string, userDataDir: string, isCI: boolean): Promise<BrowserContext> {
-  // Use Chrome channel for extension support (Playwright's bundled Chromium may not support extensions)
+  // Find Chrome executable path
+  const chromePath = isCI ? '/usr/bin/google-chrome-stable' : undefined
+
+  console.log(`Creating Chrome context with:`)
+  console.log(`  Extension path: ${extensionPath}`)
+  console.log(`  User data dir: ${userDataDir}`)
+  console.log(`  Chrome executable: ${chromePath || 'default (channel: chrome)'}`)
+  console.log(`  Is CI: ${isCI}`)
+
   const context = await chromium.launchPersistentContext(userDataDir, {
-    channel: 'chrome', // Use installed Chrome instead of bundled Chromium
+    ...(chromePath ? { executablePath: chromePath } : { channel: 'chrome' }),
     headless: false, // Chrome extensions require headed mode
     args: [
       `--disable-extensions-except=${extensionPath}`,
@@ -90,11 +98,13 @@ async function createChromeContext(extensionPath: string, userDataDir: string, i
       '--no-sandbox', // Required for CI
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage', // Overcome limited resource problems in CI
+      '--enable-features=ExtensionsToolbarMenu',
       ...(isCI ? ['--disable-gpu', '--disable-software-rasterizer'] : []),
     ],
     viewport: { width: 1280, height: 720 },
   })
 
+  console.log(`Chrome context created successfully`)
   return context
 }
 
