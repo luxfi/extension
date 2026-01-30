@@ -29,10 +29,19 @@ function getExtensionPath(browser: BrowserType): string {
     firefox: ['.output/firefox-mv2'],
   }
 
+  console.log(`Looking for ${browser} extension in baseDir: ${baseDir}`)
+
   for (const p of paths[browser]) {
     const fullPath = path.join(baseDir, p)
+    console.log(`  Checking: ${fullPath} - exists: ${fs.existsSync(fullPath)}`)
     if (fs.existsSync(fullPath)) {
-      return fullPath
+      // Verify manifest exists
+      const manifestPath = path.join(fullPath, 'manifest.json')
+      if (fs.existsSync(manifestPath)) {
+        console.log(`  Found manifest at: ${manifestPath}`)
+        return fullPath
+      }
+      console.log(`  Warning: No manifest.json in ${fullPath}`)
     }
   }
 

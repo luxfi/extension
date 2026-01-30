@@ -172,6 +172,13 @@ jobs:
           name: chrome-build
           path: .output/chrome-mv3
 
+      - name: Verify Chrome Extension Build
+        run: |
+          echo "Extension directory contents:"
+          ls -la .output/chrome-mv3/
+          echo "Manifest contents:"
+          cat .output/chrome-mv3/manifest.json
+
       - name: Install Playwright Browsers
         run: npx playwright install chromium --with-deps
 

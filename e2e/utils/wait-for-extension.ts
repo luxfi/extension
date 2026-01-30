@@ -14,9 +14,17 @@ export async function waitForExtensionLoad(
   let extensionId: string | undefined
   let onboardingPage: unknown
 
+  let iteration = 0
   while (Date.now() - startTime < timeout) {
+    iteration++
     // Check all pages
     const pages = context.pages()
+    if (iteration === 1 || iteration % 50 === 0) {
+      console.log(`[waitForExtensionLoad] Iteration ${iteration}: Found ${pages.length} pages, ${context.backgroundPages().length} bg pages, ${context.serviceWorkers().length} service workers`)
+      for (const page of pages) {
+        console.log(`  Page URL: ${page.url()}`)
+      }
+    }
     for (const page of pages) {
       const url = page.url()
       if (url.startsWith('chrome-extension://')) {
@@ -45,6 +53,9 @@ export async function waitForExtensionLoad(
       const workers = context.serviceWorkers()
       for (const worker of workers) {
         const url = worker.url()
+        if (iteration === 1 || iteration % 50 === 0) {
+          console.log(`  Service worker URL: ${url}`)
+        }
         if (url.startsWith('chrome-extension://')) {
           extensionId = url.split('/')[2]
           break
