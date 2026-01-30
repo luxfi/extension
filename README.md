@@ -1,83 +1,85 @@
-# Lux Wallet Browser Extension
+# Uniswap Extension
 
-A self-custody crypto wallet for the Lux ecosystem with multi-chain support.
+## Developer Quickstart
 
-## Features
+### Environment variables
 
-- **Multi-Chain Support**: Connect to Lux, Zoo, SPC, Hanzo networks and major EVM chains
-- **Hardware Wallet Integration**: Ledger, Trezor, Keystone support
-- **Security Engine**: Transaction risk analysis and protection
-- **Address Book**: Manage contacts and frequently used addresses
-- **Custom Networks**: Add any EVM-compatible network
+Before running the extension, you need to get the environment variables from 1password in order to get full functionality. Run the command `bun extension env:local:download` to copy them to your root folder.
 
-## Supported Networks
+### Running the extension locally
 
-### Lux Ecosystem
-| Network | Chain ID | Type |
-|---------|----------|------|
-| Lux Mainnet | 96369 | Mainnet |
-| Lux Testnet | 96368 | Testnet |
-| Zoo Mainnet | 200200 | Mainnet |
-| Zoo Testnet | 200201 | Testnet |
-| SPC Mainnet | 36911 | Mainnet |
-| SPC Testnet | 36912 | Testnet |
-| Hanzo Mainnet | 36963 | Mainnet |
-| Hanzo Testnet | 36962 | Testnet |
-
-### External Chains
-- Ethereum, Arbitrum, Optimism, Base, Polygon, Avalanche, BNB Chain, Blast, Zora
-
-## Development
+To run the extension, run the following from the top level of the monorepo:
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Start development server (Chrome)
-pnpm dev
-
-# Start development server (Firefox)
-pnpm dev:firefox
-
-# Build for production
-pnpm build          # Chrome
-pnpm build:firefox  # Firefox
-
-# Create distribution zips
-pnpm zip            # Chrome
-pnpm zip:firefox    # Firefox
+bun install
+bun extension start
 ```
 
-## Installation
+Then, load the extension into Chrome (if using Webpack):
 
-### From Release
-1. Download the latest release from [GitHub Releases](https://github.com/luxfi/extension/releases)
-2. Unzip the downloaded file
-3. **Chrome**: Go to `chrome://extensions`, enable Developer Mode, click "Load unpacked" and select the unzipped folder
-4. **Firefox**: Go to `about:debugging#/runtime/this-firefox`, click "Load Temporary Add-on" and select the manifest.json
+1. Go to **chrome://extensions**
+2. At the top right, turn on **Developer mode**
+3. Click **Load unpacked**
+4. Find and select the extension folder (apps/extension/dev)
 
-### From Source
-1. Clone the repository
-2. Run `pnpm install`
-3. Run `pnpm build` or `pnpm build:firefox`
-4. Load the extension from `.output/chrome-mv3` or `.output/firefox-mv2`
+## Configuring WXT Browser-opening behavior
 
-## Architecture
+To customize the default WXT behavior, create a file `web-ext.config.ts` in this directory.
 
-Built with:
-- [WXT](https://wxt.dev/) - Modern web extension framework
-- React 19
-- Redux Toolkit + Redux Saga
-- Tamagui UI components
-- ethers.js
+``` web-ext.config.ts
+import { defineWebExtConfig } from 'wxt';
 
-## Security
+export default defineWebExtConfig({
+  // ...
 
-- All private keys are encrypted and stored locally
-- Transaction simulation before signing
-- Phishing and scam protection
-- Open source and auditable
+  // Option 1: Connect to already running Chrome (requires Chrome to be started with --remote-debugging-port=9222)
+  // chromiumPort: 9222,
 
-## License
+  // Option 2: Use your existing Chrome profile (but Chrome must be closed first)
+  // chromiumArgs: [
+  //   '--user-data-dir=/Users/<username>/Library/Application Support/Google/Chrome',
+  //   '--profile-directory=Default'
+  // ],
 
-MIT
+  // Option 3: Create a persistent profile that matches your existing setup (recommended)
+  chromiumArgs: [
+    '--user-data-dir=./.wxt/chrome-data',
+    // Sync with your Google account to get bookmarks, extensions, etc.
+    // '--enable-sync',
+  ],
+
+  // ...
+});
+```
+
+## Running the extension locally with an absolute path (for testing scantastic)
+
+Our scantastic API requires a consistent origin header so the build must be loaded from an absolute path. This works because Chrome generates a consistent ID for the extension based on the path it was loaded from.
+
+To run the extension, run the following from the top level of the monorepo:
+
+Mac:
+
+```bash
+bun
+bun extension start:absolute
+```
+
+Windows:
+
+```bash
+bun
+bun extension start:absolute:windows
+```
+
+Then, load the extension into Chrome (if using Webpack):
+
+1. Go to **chrome://extensions**
+2. At the top right, turn on **Developer mode**
+3. Click **Load unpacked**
+4. Find and select the extension folder with an absolute path (`/Users/Shared/stretch` on Mac and `C:/ProgramData/stretch` on Windows)
+5. Your chrome extension url should be `chrome-extension://ceofpnbcmdjbibjjdniemjemmgaibeih` on Mac and `chrome-extension://ffogefanhjekjafbpofianlhkonejcoe` on Windows. The backend allows this origin and the ID will be consistently generated based off an absolute path that is consistent on all machines.
+
+## Migrations
+
+We use `redux-persist` to persist the Redux state between user sessions. Most of this state is shared between the mobile app and the extension. Please review the [Wallet Migrations README](../../packages/wallet/src/state//README.md) for details on how to write migrations when you add or remove anything from the Redux state structure.

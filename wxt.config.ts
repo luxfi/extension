@@ -1,6 +1,7 @@
-import { defineConfig } from 'wxt'
+import path from 'path'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import svgr from 'vite-plugin-svgr'
+import { defineConfig } from 'wxt'
 
 const icons = {
   16: 'assets/icons/icon16.png',
@@ -13,83 +14,82 @@ const BASE_NAME = 'Lux Wallet'
 const BASE_DESCRIPTION = 'Lux Wallet - A self-custody crypto wallet for the Lux ecosystem with multi-chain support.'
 const BASE_VERSION = '1.0.0'
 
+const BUILD_NUM = parseInt(process.env.BUILD_NUM || '0')
+const EXTENSION_VERSION = `${BASE_VERSION}.${BUILD_NUM}`
+
 export default defineConfig({
   srcDir: 'src',
   entrypointsDir: 'entrypoints',
   publicDir: 'src/public',
+  outDir: process.env.WXT_ABSOLUTE_OUTDIR || undefined,
+  outDirTemplate: process.env.WXT_ABSOLUTE_OUTDIR ? '' : undefined,
   imports: false,
   modules: ['@wxt-dev/module-react'],
 
   manifest: (env) => {
     const isDevelopment = env.mode === 'development'
+    const BUILD_ENV = isDevelopment ? undefined : process.env.BUILD_ENV
+
+    const EXTENSION_NAME_POSTFIX = BUILD_ENV === 'dev' ? 'DEV' : BUILD_ENV === 'beta' ? 'BETA' : ''
+    const name = EXTENSION_NAME_POSTFIX ? `${BASE_NAME} ${EXTENSION_NAME_POSTFIX}` : BASE_NAME
+
+    let description = BASE_DESCRIPTION
+    if (BUILD_ENV === 'beta') {
+      description = 'THIS EXTENSION IS FOR BETA TESTING'
+    }
+    if (BUILD_ENV === 'dev') {
+      description = 'THIS EXTENSION IS FOR DEV TESTING'
+    }
 
     return {
-      name: BASE_NAME,
-      description: BASE_DESCRIPTION,
-      version: BASE_VERSION,
+      name,
+      description,
+      version: EXTENSION_VERSION,
       minimum_chrome_version: '116',
       icons,
       action: {
         default_icon: icons,
       },
-      side_panel: {
-        default_path: 'sidepanel.html',
-      },
-      content_scripts: [
-        {
-          id: 'injected',
-          run_at: 'document_start',
-          matches: isDevelopment
-            ? ['http://127.0.0.1/*', 'http://localhost/*', 'https://*/*']
-            : ['https://*/*'],
-          js: ['content-scripts/injected.js'],
-        },
-        {
-          id: 'ethereum',
-          run_at: 'document_start',
-          matches: isDevelopment
-            ? ['http://127.0.0.1/*', 'http://localhost/*', 'https://*/*']
-            : ['https://*/*'],
-          js: ['content-scripts/ethereum.js'],
-          world: 'MAIN',
-        },
-      ],
       permissions: ['alarms', 'notifications', 'sidePanel', 'storage', 'tabs'],
-      host_permissions: ['https://*.lux.exchange/*', 'https://*.lux.network/*'],
       commands: {
         _execute_action: {
           suggested_key: {
             default: 'Ctrl+Shift+L',
             mac: 'Command+Shift+L',
           },
-          description: 'Open Lux Wallet',
+          description: 'Toggle Lux Wallet sidebar',
         },
       },
       externally_connectable: {
         ids: [],
-        matches: isDevelopment
-          ? ['https://app.lux.exchange/*', 'https://*.lux.exchange/*', 'https://*.lux.network/*', 'http://localhost/*', 'http://127.0.0.1/*']
-          : ['https://app.lux.exchange/*', 'https://*.lux.exchange/*', 'https://*.lux.network/*'],
+        matches: BUILD_ENV === 'prod'
+          ? ['https://app.lux.exchange/*', 'https://*.lux.exchange/*', 'https://*.lux.network/*']
+          : ['https://app.lux.exchange/*', 'https://*.lux.exchange/*', 'https://*.lux.network/*', 'http://localhost/*', 'http://127.0.0.1/*'],
       },
     }
   },
 
-  vite: () => {
-    const isProduction = process.env.NODE_ENV === 'production'
+  vite: (env) => {
+    const __dirname = path.dirname(new URL(import.meta.url).pathname)
+    const isProduction = env.mode === 'production'
 
     return {
       define: {
         __DEV__: !isProduction,
         global: 'globalThis',
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-        'process.env.IS_LUX_WALLET': '"true"',
+        'process.env.NODE_ENV': JSON.stringify(env.mode || 'development'),
+        'process.env.VERSION': JSON.stringify(EXTENSION_VERSION),
+        'process.env.IS_LUX_EXTENSION': '"true"',
       },
+
       resolve: {
         extensions: ['.web.tsx', '.web.ts', '.web.js', '.tsx', '.ts', '.js'],
         alias: {
+          '@': path.resolve(__dirname, 'src'),
           'react-native': 'react-native-web',
         },
       },
+
       plugins: [
         svgr({
           svgrOptions: {
@@ -97,6 +97,18 @@ export default defineConfig({
             ref: true,
             titleProp: true,
             exportType: 'named',
+            svgo: true,
+            svgoConfig: {
+              plugins: [
+                {
+                  name: 'preset-default',
+                  params: {
+                    overrides: { removeViewBox: false },
+                  },
+                },
+                'removeDimensions',
+              ],
+            },
           },
           include: '**/*.svg',
         }),
@@ -105,12 +117,36 @@ export default defineConfig({
             process: true,
           },
         }),
-      ],
+      ].filter(Boolean),
+
+      optimizeDeps: {
+        include: [
+          'buffer',
+          'react-native-web',
+          'ethers',
+          'eventemitter3',
+        ],
+      },
+
       build: {
-        sourcemap: !isProduction,
+        sourcemap: isProduction ? false : 'hidden',
         minify: isProduction ? 'esbuild' : undefined,
+        rollupOptions: {
+          output: {
+            entryFileNames: 'assets/[name]-[hash].js',
+            chunkFileNames: 'assets/[name]-[hash].js',
+            assetFileNames: 'assets/[name]-[hash].[ext]',
+          },
+        },
+        chunkSizeWarningLimit: 800,
       },
     }
+  },
+
+  dev: {
+    server: {
+      port: 9998,
+    },
   },
 
   webExt: {

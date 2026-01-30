@@ -1,13 +1,13 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
+  "$schema": "https://json-schema.org/tsconfig",
   "display": "Lux Wallet Extension",
   "include": ["src/**/*.ts", "src/**/*.tsx", "**/*.json", "src/declarations.d.ts"],
-  "exclude": ["node_modules", ".output", ".wxt", "wxt.config.ts"],
+  "exclude": ["node_modules", ".output", ".wxt", "wxt.config.ts", "config/**/*"],
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["dom", "dom.iterable", "ESNext"],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,

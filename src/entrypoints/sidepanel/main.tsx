@@ -1,54 +1,87 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../../../../index.d.ts" />
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../../.wxt/wxt.d.ts" />
-
-import 'src/app/utils/devtools'
-import 'symbol-observable' // Needed by `reduxed-chrome-storage` as polyfill, order matters
-
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import SidebarApp from 'src/app/core/SidebarApp'
-import { onboardingMessageChannel } from 'src/background/messagePassing/messageChannels'
-import { OnboardingMessageType } from 'src/background/messagePassing/types/ExtensionMessages'
-import { getReduxStore } from 'src/store/store'
-import { ExtensionAppLocation, StoreSynchronization } from 'src/store/storeSynchronization'
-import { initializeScrollWatcher } from 'lx/src/components/modals/ScrollLock'
-import { initializePortfolioQueryOverrides } from 'lx/src/data/rest/portfolioBalanceOverrides'
-import { logger } from 'utilities/src/logger/logger'
-// biome-ignore lint/suspicious/noExplicitAny: Global polyfill cleanup requires any type for runtime modification
-;(globalThis as any).regeneratorRuntime = undefined
 
-export function makeSidebar(): void {
-  function initSidebar(): void {
-    onboardingMessageChannel
-      .sendMessage({
-        type: OnboardingMessageType.SidebarOpened,
-      })
-      .catch((error) => {
-        logger.error(error, {
-          tags: {
-            file: 'sidebar.ts',
-            function: 'onboardingMessageChannel.sendMessage',
-          },
-        })
-      })
-
-    // biome-ignore lint/style/noNonNullAssertion: DOM root element guaranteed to exist in extension context
-    const container = window.document.querySelector('#root')!
-    const root = createRoot(container)
-
-    root.render(
-      <React.StrictMode>
-        <SidebarApp />
-      </React.StrictMode>,
-    )
-  }
-
-  StoreSynchronization.init(ExtensionAppLocation.SidePanel)
-  initializePortfolioQueryOverrides({ store: getReduxStore() })
-  initSidebar()
-  initializeScrollWatcher()
+function App() {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      padding: '24px',
+      textAlign: 'center',
+    }}>
+      <div style={{
+        width: '80px',
+        height: '80px',
+        marginBottom: '24px',
+        background: '#000',
+        borderRadius: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <polygon points="24,8 40,40 8,40" fill="white" />
+        </svg>
+      </div>
+      <h1 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '8px' }}>
+        Lux Wallet
+      </h1>
+      <p style={{ fontSize: '14px', opacity: 0.7, marginBottom: '32px' }}>
+        Multi-chain crypto wallet for the Lux ecosystem
+      </p>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        width: '100%',
+        maxWidth: '280px',
+      }}>
+        <button style={{
+          padding: '14px 24px',
+          fontSize: '16px',
+          fontWeight: 500,
+          background: '#000',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '12px',
+          cursor: 'pointer',
+        }}>
+          Create Wallet
+        </button>
+        <button style={{
+          padding: '14px 24px',
+          fontSize: '16px',
+          fontWeight: 500,
+          background: 'transparent',
+          color: 'inherit',
+          border: '1px solid currentColor',
+          borderRadius: '12px',
+          cursor: 'pointer',
+          opacity: 0.8,
+        }}>
+          Import Wallet
+        </button>
+      </div>
+      <p style={{
+        marginTop: '32px',
+        fontSize: '12px',
+        opacity: 0.5,
+      }}>
+        Version {chrome.runtime.getManifest().version}
+      </p>
+    </div>
+  )
 }
 
-makeSidebar()
+const container = document.getElementById('root')
+if (container) {
+  const root = createRoot(container)
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  )
+}
