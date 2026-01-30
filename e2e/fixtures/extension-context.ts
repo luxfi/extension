@@ -78,7 +78,9 @@ export async function createExtensionContext(options: CreateExtensionContextOpti
 }
 
 async function createChromeContext(extensionPath: string, userDataDir: string, isCI: boolean): Promise<BrowserContext> {
+  // Use Chrome channel for extension support (Playwright's bundled Chromium may not support extensions)
   const context = await chromium.launchPersistentContext(userDataDir, {
+    channel: 'chrome', // Use installed Chrome instead of bundled Chromium
     headless: false, // Chrome extensions require headed mode
     args: [
       `--disable-extensions-except=${extensionPath}`,
