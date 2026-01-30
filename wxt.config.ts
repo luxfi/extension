@@ -29,6 +29,7 @@ export default defineConfig({
   manifest: (env) => {
     const isDevelopment = env.mode === 'development'
     const BUILD_ENV = isDevelopment ? undefined : process.env.BUILD_ENV
+    const isFirefox = env.browser === 'firefox'
 
     const EXTENSION_NAME_POSTFIX = BUILD_ENV === 'dev' ? 'DEV' : BUILD_ENV === 'beta' ? 'BETA' : ''
     const name = EXTENSION_NAME_POSTFIX ? `${BASE_NAME} ${EXTENSION_NAME_POSTFIX}` : BASE_NAME
@@ -41,32 +42,60 @@ export default defineConfig({
       description = 'THIS EXTENSION IS FOR DEV TESTING'
     }
 
-    return {
+    // Base permissions (cross-browser compatible)
+    const permissions: string[] = ['alarms', 'notifications', 'storage', 'tabs']
+
+    // Add Chrome-only permissions
+    if (!isFirefox) {
+      permissions.push('sidePanel')
+    }
+
+    const manifest: Record<string, unknown> = {
       name,
       description,
       version: EXTENSION_VERSION,
-      minimum_chrome_version: '116',
       icons,
-      action: {
-        default_icon: icons,
-      },
-      permissions: ['alarms', 'notifications', 'sidePanel', 'storage', 'tabs'],
+      permissions,
       commands: {
         _execute_action: {
           suggested_key: {
             default: 'Ctrl+Shift+L',
             mac: 'Command+Shift+L',
           },
-          description: 'Toggle Lux Wallet sidebar',
+          description: 'Toggle Lux Wallet',
         },
       },
-      externally_connectable: {
+    }
+
+    // Chrome-specific settings
+    if (!isFirefox) {
+      manifest.minimum_chrome_version = '116'
+      manifest.action = {
+        default_icon: icons,
+      }
+      manifest.externally_connectable = {
         ids: [],
         matches: BUILD_ENV === 'prod'
           ? ['https://app.lux.exchange/*', 'https://*.lux.exchange/*', 'https://*.lux.network/*']
           : ['https://app.lux.exchange/*', 'https://*.lux.exchange/*', 'https://*.lux.network/*', 'http://localhost/*', 'http://127.0.0.1/*'],
-      },
+      }
     }
+
+    // Firefox-specific settings
+    if (isFirefox) {
+      manifest.browser_specific_settings = {
+        gecko: {
+          id: '{lux-wallet@lux.network}',
+          strict_min_version: '109.0',
+        },
+      }
+      manifest.browser_action = {
+        default_icon: icons,
+        default_title: BASE_NAME,
+      }
+    }
+
+    return manifest
   },
 
   vite: (env) => {
