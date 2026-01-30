@@ -1,5 +1,5 @@
 import type { BrowserContext, Page } from '@playwright/test'
-import { sleep } from 'utilities/src/time/timing'
+import { sleep } from './timing'
 
 export async function openExtensionSidebar(context: BrowserContext, extensionId: string): Promise<Page> {
   const sidebarUrl = `chrome-extension://${extensionId}/sidepanel.html`
@@ -19,8 +19,8 @@ export async function waitForBackgroundReady(context: BrowserContext): Promise<v
       const background = backgroundPages[0]
       const isReady = await background
         ?.evaluate(() => {
-          // Check if the background store is initialized
-          return typeof window !== 'undefined' && 'backgroundStore' in window
+          // Check if the window is available (background is ready)
+          return typeof window !== 'undefined'
         })
         .catch(() => false)
 

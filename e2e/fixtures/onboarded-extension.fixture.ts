@@ -1,9 +1,8 @@
-/** biome-ignore-all lint/suspicious/noConsole: fixture file */
 import { type BrowserContext, test as base } from '@playwright/test'
-import { createExtensionContext } from 'e2e/fixtures/extension-context'
-import { completeOnboarding } from 'e2e/utils/onboarding-helpers'
-import { waitForExtensionLoad } from 'e2e/utils/wait-for-extension'
-import { ONE_SECOND_MS } from 'utilities/src/time/time'
+import { createExtensionContext } from './extension-context'
+import { completeOnboarding } from '../utils/onboarding-helpers'
+import { waitForExtensionLoad } from '../utils/wait-for-extension'
+import { TEN_SECONDS_MS } from '../utils/timing'
 
 interface OnboardedExtensionFixtures {
   context: BrowserContext
@@ -21,7 +20,7 @@ export const onboardedExtensionTest = base.extend<OnboardedExtensionFixtures>({
     try {
       // Wait for extension to load and onboarding to appear
       const { onboardingPage } = await waitForExtensionLoad(context, {
-        timeout: ONE_SECOND_MS * 10,
+        timeout: TEN_SECONDS_MS,
         waitForOnboarding: true,
       })
 
@@ -43,7 +42,7 @@ export const onboardedExtensionTest = base.extend<OnboardedExtensionFixtures>({
   },
 
   extensionId: async ({ context }, use) => {
-    const { extensionId } = await waitForExtensionLoad(context, { timeout: ONE_SECOND_MS * 10 })
+    const { extensionId } = await waitForExtensionLoad(context, { timeout: TEN_SECONDS_MS })
     await use(extensionId)
   },
 })

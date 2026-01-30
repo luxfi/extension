@@ -1,7 +1,6 @@
 import { expect } from '@playwright/test'
-import { freshExtensionTest as test } from 'e2e/fixtures/extension.fixture'
-import { ONE_SECOND_MS } from 'utilities/src/time/time'
-import { sleep } from 'utilities/src/time/timing'
+import { freshExtensionTest as test } from '../../fixtures/extension.fixture'
+import { ONE_SECOND_MS, sleep } from '../../utils/timing'
 
 test.describe('Basic Extension Setup', () => {
   test('extension loads successfully', async ({ context, extensionId }) => {
@@ -10,7 +9,7 @@ test.describe('Basic Extension Setup', () => {
     expect(extensionId).toMatch(/^[a-z]{32}$/)
 
     // Wait for extension pages to appear with retry logic
-    let extensionPages = []
+    let extensionPages: unknown[] = []
     const maxAttempts = 20
     for (let i = 0; i < maxAttempts; i++) {
       await sleep(ONE_SECOND_MS)
@@ -40,5 +39,33 @@ test.describe('Basic Extension Setup', () => {
     // Either background pages or service workers should exist
     const hasBackground = backgroundPages.length > 0 || serviceWorkers.length > 0
     expect(hasBackground).toBeTruthy()
+  })
+
+  test('manifest is valid', async ({ context, extensionId }) => {
+    // Navigate to the extension's manifest
+    const page = await context.newPage()
+    await page.goto(`chrome-extension://${extensionId}/manifest.json`)
+
+    // Get the manifest content
+    const content = await page.textContent('body')
+    expect(content).toBeTruthy()
+
+    // Parse and validate manifest
+    const manifest = JSON.parse(content || '{}')
+    expect(manifest.name).toBe('Lux Wallet')
+    expect(manifest.manifest_version).toBe(3)
+    expect(manifest.version).toBeTruthy()
+  })
+
+  test('onboarding page opens on install', async ({ context, extensionId }) => {
+    // Wait for onboarding page to open
+    await sleep(ONE_SECOND_MS * 3)
+
+    const pages = context.pages()
+    const onboardingPage = pages.find(
+      (page) => page.url().includes(`chrome-extension://${extensionId}`) && page.url().includes('onboarding')
+    )
+
+    expect(onboardingPage).toBeTruthy()
   })
 })

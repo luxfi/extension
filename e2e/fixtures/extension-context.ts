@@ -1,30 +1,69 @@
-import { type BrowserContext, chromium } from '@playwright/test'
+import { type BrowserContext, chromium, firefox } from '@playwright/test'
 import os from 'os'
 import path from 'path'
+import fs from 'fs'
+
+export type BrowserType = 'chrome' | 'firefox'
 
 interface CreateExtensionContextOptions {
   /** Prefix for the user data directory (for test isolation) */
   userDataDirPrefix?: string
+  /** Browser to use: 'chrome' or 'firefox' */
+  browser?: BrowserType
+}
+
+/**
+ * Get the extension path for the specified browser
+ */
+function getExtensionPath(browser: BrowserType): string {
+  const baseDir = path.join(__dirname, '../..')
+
+  // WXT output directories
+  const paths: Record<BrowserType, string[]> = {
+    chrome: ['.output/chrome-mv3', 'build'],
+    firefox: ['.output/firefox-mv2'],
+  }
+
+  for (const p of paths[browser]) {
+    const fullPath = path.join(baseDir, p)
+    if (fs.existsSync(fullPath)) {
+      return fullPath
+    }
+  }
+
+  throw new Error(`Extension build not found for ${browser}. Run 'pnpm build:${browser}' first.`)
 }
 
 /**
  * Creates a persistent browser context with the extension loaded.
- * Returns both the context and cleanup function.
+ * Supports both Chrome and Firefox.
  */
 export async function createExtensionContext(options: CreateExtensionContextOptions = {}): Promise<BrowserContext> {
-  const { userDataDirPrefix = 'playwright-extension' } = options
+  const {
+    userDataDirPrefix = 'playwright-extension',
+    browser = 'chrome'
+  } = options
 
-  const extensionPath = path.join(__dirname, '../../build')
+  const extensionPath = getExtensionPath(browser)
+  console.log(`Loading ${browser} extension from: ${extensionPath}`)
 
   // Generate a unique user data directory for each test to ensure isolation
   const userDataDir = path.join(
     os.tmpdir(),
-    `${userDataDirPrefix}-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+    `${userDataDirPrefix}-${browser}-${Date.now()}-${Math.random().toString(36).substring(7)}`,
   )
 
   // CI environments need different args for headless-like behavior
   const isCI = process.env.CI === 'true'
 
+  if (browser === 'firefox') {
+    return createFirefoxContext(extensionPath, userDataDir, isCI)
+  }
+
+  return createChromeContext(extensionPath, userDataDir, isCI)
+}
+
+async function createChromeContext(extensionPath: string, userDataDir: string, isCI: boolean): Promise<BrowserContext> {
   const context = await chromium.launchPersistentContext(userDataDir, {
     headless: false, // Chrome extensions require headed mode
     args: [
@@ -41,4 +80,40 @@ export async function createExtensionContext(options: CreateExtensionContextOpti
   })
 
   return context
+}
+
+async function createFirefoxContext(extensionPath: string, userDataDir: string, isCI: boolean): Promise<BrowserContext> {
+  // Firefox requires a different approach - we need to install the extension after launch
+  const context = await firefox.launchPersistentContext(userDataDir, {
+    headless: false, // Extensions require headed mode
+    firefoxUserPrefs: {
+      'extensions.autoDisableScopes': 0,
+      'extensions.enableScopes': 15,
+      'xpinstall.signatures.required': false,
+      'devtools.debugger.remote-enabled': true,
+      'devtools.debugger.prompt-connection': false,
+    },
+    viewport: { width: 1280, height: 720 },
+    args: isCI ? [] : [],
+  })
+
+  // Install the extension
+  // Note: For Firefox, we need to load as temporary add-on via about:debugging
+  // or package as XPI. Playwright supports loading via the user profile.
+
+  return context
+}
+
+/**
+ * Creates a Chrome context specifically (for Chrome-specific tests)
+ */
+export async function createChromeExtensionContext(options: Omit<CreateExtensionContextOptions, 'browser'> = {}): Promise<BrowserContext> {
+  return createExtensionContext({ ...options, browser: 'chrome' })
+}
+
+/**
+ * Creates a Firefox context specifically (for Firefox-specific tests)
+ */
+export async function createFirefoxExtensionContext(options: Omit<CreateExtensionContextOptions, 'browser'> = {}): Promise<BrowserContext> {
+  return createExtensionContext({ ...options, browser: 'firefox' })
 }

@@ -1,6 +1,5 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: e2e test file */
 import type { BrowserContext } from '@playwright/test'
-import { sleep } from 'utilities/src/time/timing'
+import { sleep } from './timing'
 
 export async function waitForExtensionLoad(
   context: BrowserContext,
@@ -8,12 +7,12 @@ export async function waitForExtensionLoad(
     timeout?: number
     waitForOnboarding?: boolean
   },
-): Promise<{ extensionId: string; onboardingPage?: any }> {
+): Promise<{ extensionId: string; onboardingPage?: unknown }> {
   const timeout = options?.timeout ?? 30000
   const startTime = Date.now()
 
   let extensionId: string | undefined
-  let onboardingPage: any
+  let onboardingPage: unknown
 
   while (Date.now() - startTime < timeout) {
     // Check all pages
