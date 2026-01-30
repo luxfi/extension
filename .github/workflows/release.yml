@@ -188,16 +188,8 @@ jobs:
           echo "Manifest contents:"
           cat .output/chrome-mv3/manifest.json
 
-      - name: Install Google Chrome
-        run: |
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-          google-chrome --version
-
-      - name: Install Playwright Dependencies
-        run: npx playwright install-deps chromium
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
 
       - name: Run E2E Tests
         uses: coactions/setup-xvfb@v1

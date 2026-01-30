@@ -78,17 +78,15 @@ export async function createExtensionContext(options: CreateExtensionContextOpti
 }
 
 async function createChromeContext(extensionPath: string, userDataDir: string, isCI: boolean): Promise<BrowserContext> {
-  // Find Chrome executable path
-  const chromePath = isCI ? '/usr/bin/google-chrome-stable' : undefined
-
+  // Use bundled Chromium only - Google Chrome removed side-loading flags
+  // executablePath and channel options no longer work for extension testing
   console.log(`Creating Chrome context with:`)
   console.log(`  Extension path: ${extensionPath}`)
   console.log(`  User data dir: ${userDataDir}`)
-  console.log(`  Chrome executable: ${chromePath || 'default (channel: chrome)'}`)
+  console.log(`  Browser: bundled Chromium (required for extension side-loading)`)
   console.log(`  Is CI: ${isCI}`)
 
   const context = await chromium.launchPersistentContext(userDataDir, {
-    ...(chromePath ? { executablePath: chromePath } : { channel: 'chrome' }),
     headless: false, // Chrome extensions require headed mode
     args: [
       `--disable-extensions-except=${extensionPath}`,
@@ -103,6 +101,9 @@ async function createChromeContext(extensionPath: string, userDataDir: string, i
     ],
     viewport: { width: 1280, height: 720 },
   })
+
+  // Wait for service worker to initialize
+  await new Promise(resolve => setTimeout(resolve, 1000))
 
   console.log(`Chrome context created successfully`)
   return context
