@@ -2,6 +2,11 @@ import { type BrowserContext, chromium, firefox } from '@playwright/test'
 import os from 'os'
 import path from 'path'
 import fs from 'fs'
+import { fileURLToPath } from 'url'
+
+// ESM-compatible __dirname
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 export type BrowserType = 'chrome' | 'firefox'
 
