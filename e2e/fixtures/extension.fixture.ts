@@ -1,18 +1,16 @@
 import { type BrowserContext, test as base } from '@playwright/test'
-import { createExtensionContext, type BrowserType } from './extension-context'
+import { createExtensionContext } from './extension-context'
 import { waitForExtensionLoad } from '../utils/wait-for-extension'
 
 interface ExtensionFixtures {
   context: BrowserContext
   extensionId: string
-  browser: BrowserType
 }
 
 /**
  * Chrome extension test fixture
  */
 export const chromeExtensionTest = base.extend<ExtensionFixtures>({
-  browser: ['chrome', { option: true }],
   // biome-ignore lint/correctness/noEmptyPattern: fixture file
   context: async ({}, use) => {
     const context = await createExtensionContext({ browser: 'chrome' })
@@ -30,7 +28,6 @@ export const chromeExtensionTest = base.extend<ExtensionFixtures>({
  * Note: Firefox extension loading in Playwright is limited
  */
 export const firefoxExtensionTest = base.extend<ExtensionFixtures>({
-  browser: ['firefox', { option: true }],
   // biome-ignore lint/correctness/noEmptyPattern: fixture file
   context: async ({}, use) => {
     const context = await createExtensionContext({ browser: 'firefox' })
