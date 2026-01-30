@@ -231,5 +231,5 @@ jobs:
         with:
           api_key: ${{ secrets.FIREFOX_API_KEY }}
           api_secret: ${{ secrets.FIREFOX_API_SECRET }}
-          guid: '{lux-wallet@lux.network}'
+          guid: 'wallet@lux.network'
           xpi_path: lux-wallet-firefox.zip

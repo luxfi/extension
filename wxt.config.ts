@@ -52,6 +52,9 @@ export default defineConfig({
       permissions.push('sidePanel')
     }
 
+    // Firefox MV2 uses _execute_browser_action, Chrome MV3 uses _execute_action
+    const commandKey = isFirefox ? '_execute_browser_action' : '_execute_action'
+
     const manifest: Record<string, unknown> = {
       name,
       description,
@@ -59,7 +62,7 @@ export default defineConfig({
       icons,
       permissions,
       commands: {
-        _execute_action: {
+        [commandKey]: {
           suggested_key: {
             default: 'Ctrl+Shift+L',
             mac: 'Command+Shift+L',
@@ -87,7 +90,7 @@ export default defineConfig({
     if (isFirefox) {
       manifest.browser_specific_settings = {
         gecko: {
-          id: '{lux-wallet@lux.network}',
+          id: 'wallet@lux.network',
           strict_min_version: '109.0',
         },
       }
