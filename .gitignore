@@ -37,3 +37,4 @@ tsconfig.tsbuildinfo
 e2e/test-results/
 
 coverage/
+CLAUDE.md
