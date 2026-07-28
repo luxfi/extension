@@ -18,7 +18,9 @@
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
     "types": ["chrome", "node"]
   }
