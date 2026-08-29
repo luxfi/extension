@@ -29,24 +29,24 @@
     "validate:firefox": "pnpm build:firefox && npx web-ext lint --source-dir .output/firefox-mv2"
   },
   "dependencies": {
-    "@wxt-dev/module-react": "^1.2.2",
-    "ethers": "^6.17.0",
-    "eventemitter3": "^5.0.4",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "react-native-web": "^0.21.2",
-    "vite-plugin-node-polyfills": "^0.28.0",
-    "vite-plugin-svgr": "^5.2.0",
-    "wxt": "^0.21.4"
+    "@wxt-dev/module-react": "catalog:",
+    "ethers": "catalog:",
+    "eventemitter3": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-native-web": "catalog:",
+    "vite-plugin-node-polyfills": "catalog:",
+    "vite-plugin-svgr": "catalog:",
+    "wxt": "catalog:"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
-    "@types/chrome": "^0.2.7",
-    "@types/node": "26.4.0",
-    "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.5",
-    "typescript": "7.0.2",
-    "web-ext": "^10.6.0"
+    "@playwright/test": "catalog:",
+    "@types/chrome": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
+    "web-ext": "catalog:"
   },
   "browserslist": [
     "last 2 chrome versions",
