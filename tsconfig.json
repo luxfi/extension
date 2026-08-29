@@ -17,9 +17,9 @@
     "isolatedModules": true,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "*": ["./*"],
+      "@/*": ["./src/*"]
     },
     "types": ["chrome", "node"]
   }
